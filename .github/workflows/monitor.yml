@@ -19,7 +19,7 @@ jobs:
           python-version: '3.10'
 
       - name: Installa le librerie necessarie
-        run: pip install requests beautifulsoup4
+        run: pip install requests beautifulsoup4 curl_cffi
 
       - name: Esegui lo script di controllo
         env:

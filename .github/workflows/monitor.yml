@@ -1,0 +1,28 @@
+name: Ticket Monitor
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'  # Esegui ogni 5 minuti
+  workflow_dispatch:       # Permette di avviare il bot anche manualmente
+
+jobs:
+  check-tickets:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Scarica il codice
+        uses: actions/checkout@v3
+
+      - name: Configura Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Installa le librerie necessarie
+        run: pip install requests beautifulsoup4
+
+      - name: Esegui lo script di controllo
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python monitor.py

@@ -3,6 +3,7 @@ import time
 import requests
 from bs4 import BeautifulSoup
 import random  # Aggiunto per generare pause casuali
+from curl_cffi import requests  # Questa è la nuova libreria "stealth"
 
 # Recupera i dati dai segreti di GitHub che abbiamo impostato
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
@@ -39,14 +40,11 @@ def invia_messaggio_telegram(messaggio):
     requests.post(url, json=payload)
 
 def controlla_biglietti():
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, come Gecko) Chrome/114.0.0.0 Safari/537.36",
-        "Accept-Language": "it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7",
-    }
 
     for url in URLS:
         try:
-            risposta = requests.get(url, headers=headers, timeout=10)
+            # impersonate="chrome116" è la magia: imita un vero browser al 100%
+            risposta = requests.get(url, impersonate="chrome116", timeout=15)
             
             if risposta.status_code == 200:
                 soup = BeautifulSoup(risposta.text, "html.parser")

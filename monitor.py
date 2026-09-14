@@ -2,6 +2,7 @@ import os
 import time
 import requests
 from bs4 import BeautifulSoup
+import random  # Aggiunto per generare pause casuali
 
 # Recupera i dati dai segreti di GitHub che abbiamo impostato
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
@@ -48,28 +49,31 @@ def controlla_biglietti():
             risposta = requests.get(url, headers=headers, timeout=10)
             
             if risposta.status_code == 200:
-                # BeautifulSoup ci aiuta a estrarre solo il testo visibile dalla pagina, rimuovendo il codice HTML
                 soup = BeautifulSoup(risposta.text, "html.parser")
                 testo_pagina = soup.get_text(separator=" ", strip=True)
+                
+                # TRUCCO: Trasformiamo TUTTO il testo della pagina in minuscolo
+                testo_pagina_lower = testo_pagina.lower()
                 
                 zone_trovate = []
                 
                 for zona in ZONE_INTERESSATE:
-                    if zona in testo_pagina:
-                        # Troviamo a che punto del testo si trova il nome della zona
-                        indice = testo_pagina.find(zona)
+                    # Trasformiamo in minuscolo anche il nome della zona che stiamo cercando
+                    zona_lower = zona.lower()
+                    
+                    if zona_lower in testo_pagina_lower:
+                        # Troviamo l'indice nel testo tutto in minuscolo
+                        indice = testo_pagina_lower.find(zona_lower)
                         
-                        # "Ritagliamo" i 200 caratteri successivi al nome della zona.
-                        # Lì in mezzo ci sarà il prezzo, oppure la scritta "Non disponibile"
-                        contesto = testo_pagina[indice : indice + 200]
+                        # Ritagliamo i 200 caratteri successivi
+                        contesto = testo_pagina_lower[indice : indice + 200]
                         
-                        # Se nel testo vicino alla zona NON c'è scritto che è esaurita...
-                        if "Non disponibile" not in contesto and "Esaurito" not in contesto:
+                        # Cerchiamo le parole di esaurimento (scritte rigorosamente in minuscolo!)
+                        if "non disponibile" not in contesto and "esaurito" not in contesto and "sold out" not in contesto:
+                            # Aggiungiamo la 'zona' originale (con le maiuscole belle da vedere) alla lista
                             zone_trovate.append(zona)
                 
-                # Se abbiamo trovato almeno una zona disponibile...
                 if len(zone_trovate) > 0:
-                    # Creiamo un bell'elenco puntato per il messaggio Telegram
                     elenco = "\n- ".join(zone_trovate)
                     testo = f"🚨 <b>ALLARME HARRY STYLES!</b> 🚨\n\nHai trovato i biglietti! Settori disponibili:\n- {elenco}\n\nCorri: {url}"
                     invia_messaggio_telegram(testo)
@@ -83,7 +87,10 @@ def controlla_biglietti():
         except Exception as e:
             print(f"Errore: {e}")
             
-        time.sleep(3) # Pausa tra una data e l'altra
+        # Pausa CASUALE tra 4 e 12 secondi (fa impazzire i sistemi antibot perché sembra umano!)
+        attesa_casuale = random.randint(4, 12)
+        print(f"Aspetto {attesa_casuale} secondi prima della prossima data...")
+        time.sleep(attesa_casuale)
 
 if __name__ == "__main__":
     controlla_biglietti()
